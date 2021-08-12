@@ -6,21 +6,37 @@
 using namespace std;
 
 string TIME;
-string SSID = "she ate my balls";
 
 class wifi
 {
 public:
-    string hr_con, min_con, hr_discon, min_discon, time, status_str;
+    string hr_con, min_con, hr_discon, min_discon, time, status_str, SSID;
     int state;
+    ofstream logfile;
 
 
+    //DEFAULT VALUES
     wifi()
     {
         hr_con = "00";
         min_con = "01";
         hr_discon = "05";
         min_discon = "59";
+        SSID = "she ate my balls";
+        state = 0;
+
+        logfile.open("auto_wifi_log.txt", fstream::app);
+        logfile<<"\n\n\n\n"<<TIME;
+        logfile.close();
+    }
+
+    void default_values()
+    {
+        hr_con = "00";
+        min_con = "01";
+        hr_discon = "05";
+        min_discon = "59";
+        SSID = "she ate my balls";
         state = 0;
     }
 
@@ -35,6 +51,9 @@ public:
         cin>>hr_discon;
         cout<<"Enter end min: ";
         cin>>min_discon;
+        if(hr_con == "0" && hr_discon == "0" && min_con == "0" && min_discon == "0") //IF ALL PARAMETERS ARE 0, DEFAULT VALUES WILL BE USED
+            default_values();
+        cout<<"\n\n";
     }
 
 
@@ -45,23 +64,29 @@ public:
         system("ipconfig>automation.txt");
         ifstream outfile;
         outfile.open("automation.txt");
-        while(outfile>>status_str)
-        {
-            if(status_str == "disconnected")
-                count++;
-        }
+
+        count = check_internet_connection();
+
         outfile.close();
         system("del automation.txt");
-        if(count == 6/*DISCONNECTED*/&& state == 1/*FORCE_CONNECT_ON*/)
+        if(count == 0/*DISCONNECTED*/&& state == 1/*FORCE_CONNECT_ON*/)
         {
             //system("NETSH WLAN CONNECT SSID=Z40 NAME=Z40"); //SSID WITHOUT BLANK SPACES
             system(("NETSH WLAN CONNECT SSID=\"" + SSID + "\" NAME=\"" + SSID + "\"").c_str()); //SSID WITH BLANK SPACES
-            cout<<"Forced connection at "<<TIME<<endl;
+            cout<<"FORCED CONNECTION AT "<<TIME<<endl;
+
+            logfile.open("auto_wifi_log.txt", fstream::app);
+            logfile<<"FORCED CONNETION AT "<<TIME;
+            logfile.close();
         }
-        else if(count == 5/*CONNECTED*/&& state == 0/*FORCE_CONNECT_OFF*/)
+        else if(count == 1/*CONNECTED*/&& state == 0/*FORCE_CONNECT_OFF*/)
         {
             system("NETSH WLAN DISCONNECT");
-            cout<<"Forced disconnection at "<<TIME<<endl;
+            cout<<"FORCED DISCONNECTION AT "<<TIME<<endl;
+
+            logfile.open("auto_wifi_log.txt", fstream::app);
+            logfile<<"FORCED DISCONNETION AT "<<TIME;
+            logfile.close();
         }
     }
 
@@ -73,8 +98,12 @@ public:
             //system("shutdown -s -t 0");//shutdown command invoked
             //system("NETSH WLAN CONNECT SSID=Z40 NAME=Z40"); SSID WITHOUT BLANK SPACES
             system(("NETSH WLAN CONNECT SSID=\"" + SSID + "\" NAME=\"" + SSID + "\"").c_str()); //SSID WITH BLANK SPACES
-            cout<<"Connected at "<<TIME<<endl;
+            cout<<TIME<<endl;
             state=1;
+
+            logfile.open("auto_wifi_log.txt", fstream::app);
+            logfile<<"NORMAL CONNECTION ESTABLISHMENT AT "<<TIME;
+            logfile.close();
         }
     }
 
@@ -85,9 +114,34 @@ public:
         {
             //system("shutdown -s -t 0");//shutdown command invoked
             system("NETSH WLAN DISCONNECT");//wlan disconnect command invoked
-            cout<<"Disconnected at "<<TIME<<endl;
+            cout<<TIME<<endl;
             state=0;
+
+            logfile.open("auto_wifi_log.txt", fstream::app);
+            logfile<<"NORMAL DISCONNETION AT "<<TIME;
+            logfile.close();
         }
+    }
+
+    int check_internet_connection()
+    {
+        string status_str;
+        system("ping google.com -n 1 -w 1 -l 1 >automation.txt");
+        Sleep(500);
+        ifstream outfile;
+        outfile.open("automation.txt");
+        while(outfile>>status_str)
+        {
+            if(status_str == "Pinging")
+                {
+                    return 1;
+                    break;
+                }
+            else
+                return 0;
+    }
+    outfile.close();
+    system("del automation.txt");
     }
 };
 
@@ -96,7 +150,7 @@ int main()
 {
     wifi wifi;
 
-    //wifi.getdata();
+    wifi.getdata();
 
     wp1:
 
@@ -110,5 +164,6 @@ int main()
     Sleep(10000);
 
     goto wp1;
+
     return 0;
 }
