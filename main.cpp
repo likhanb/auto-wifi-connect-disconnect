@@ -22,7 +22,8 @@ public:
         min_con = "01";
         hr_discon = "05";
         min_discon = "59";
-        SSID = "she ate my balls";
+        SSID = "wifissid";
+        //PASS = assuming network is already saved in system
         state = 0;
 
         logfile.open("auto_wifi_log.txt", fstream::app);
@@ -36,7 +37,7 @@ public:
         min_con = "01";
         hr_discon = "05";
         min_discon = "59";
-        SSID = "she ate my balls";
+        SSID = "wifissid";
         state = 0;
     }
 
